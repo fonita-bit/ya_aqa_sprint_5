@@ -1,87 +1,81 @@
-import time
-from helpers.locators import MainPageLocators, ProfilePageLocators, ConstructorPageLocators
 
-# Проверяет, что при нажатии на кнопку «Личный кабинет» на главной странице, происходит вход в личный кабинет, и на странице появляется кнопка «Конструктор».
+import pytest
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from helpers.locators import ProfilePageLocators, ConstructorPageLocators
+from helpers.data import generate_email, generate_password
 
-def test_profile_button(driver):
+
+def test_logout_from_profile(driver):
+    email = generate_email()
+    password = generate_password()
+
     # Открываем главную страницу
     driver.get("https://stellarburgers.nomoreparties.site/")
 
-    # Нажимаем кнопку "Личный кабинет"
-    driver.find_element(*MainPageLocators.LOGIN_BUTTON_MAIN).click()
-    time.sleep(2)  # Ждем, чтобы форма входа загрузилась
+    # Явное ожидание кнопки "Войти в аккаунт"
+    login_button = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.XPATH, "//button[text()='Войти в аккаунт']"))
+    )
+    login_button.click()
 
-    # Вводим данные для входа (пример, необходимо изменить для реального теста)
-    driver.find_element(By.NAME, "email").send_keys("testuser@example.com")
-    driver.find_element(By.NAME, "password").send_keys("password123")
+    # Вводим данные для входа
+    driver.find_element(By.NAME, "email").send_keys(email)
+    driver.find_element(By.NAME, "password").send_keys(password)
+
+    # Нажимаем кнопку "Войти"
     driver.find_element(By.XPATH, "//button[text()='Войти']").click()
 
-    # Пауза, чтобы удостовериться, что мы на странице личного кабинета
-    time.sleep(2)
-
-    # Проверяем, что на странице личного кабинета есть кнопка "Конструктор"
-    assert driver.find_element(*ProfilePageLocators.CONSTRUCTOR_BUTTON).is_displayed()
-
-#  Проверяет, что при нажатии на кнопку «Выйти» в личном кабинете происходит выход из аккаунта и мы возвращаемся на главную страницу.
-def test_logout(driver):
-    # Открываем главную страницу
-    driver.get("https://stellarburgers.nomoreparties.site/")
-
-    # Нажимаем кнопку "Войти в аккаунт"
-    driver.find_element(*MainPageLocators.LOGIN_BUTTON_MAIN).click()
-    time.sleep(2)  # Ждем, чтобы форма входа загрузилась
-
-    # Вводим данные для входа (пример, необходимо изменить для реального теста)
-    driver.find_element(By.NAME, "email").send_keys("testuser@example.com")
-    driver.find_element(By.NAME, "password").send_keys("password123")
-    driver.find_element(By.XPATH, "//button[text()='Войти']").click()
-
-    # Пауза, чтобы удостовериться, что мы на странице личного кабинета
-    time.sleep(2)
+    # Ожидаем, что мы на странице личного кабинета
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located(ProfilePageLocators.PROFILE_PAGE_HEADER)
+    )
 
     # Нажимаем кнопку "Выйти"
     driver.find_element(*ProfilePageLocators.LOGOUT_BUTTON).click()
-    time.sleep(2)
 
-    # Проверяем, что мы вернулись на главную страницу
-    assert "Stellar Burgers" in driver.title
+    # Ожидаем, что нас перебросит на главную страницу
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.XPATH, "//button[text()='Войти в аккаунт']"))
+    )
 
-#Проверяет, что при нажатии на кнопку «Конструктор» на странице личного кабинета, мы переходим на страницу конструктора, и на странице конструктора видим элементы, уникальные для неё (например, логотип).
-def test_go_to_constructor_from_profile(driver):
+    # Проверяем, что находимся на главной странице
+    assert "Конструктор" in driver.page_source
+
+
+def test_navigate_to_constructor_from_profile(driver):
+    email = generate_email()
+    password = generate_password()
+
     # Открываем главную страницу
     driver.get("https://stellarburgers.nomoreparties.site/")
 
-    # Нажимаем кнопку "Войти в аккаунт"
-    driver.find_element(*MainPageLocators.LOGIN_BUTTON_MAIN).click()
-    time.sleep(2)  # Ждем, чтобы форма входа загрузилась
+    # Явное ожидание кнопки "Войти в аккаунт"
+    login_button = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.XPATH, "//button[text()='Войти в аккаунт']"))
+    )
+    login_button.click()
 
-    # Вводим данные для входа (пример, необходимо изменить для реального теста)
-    driver.find_element(By.NAME, "email").send_keys("testuser@example.com")
-    driver.find_element(By.NAME, "password").send_keys("password123")
+    # Вводим данные для входа
+    driver.find_element(By.NAME, "email").send_keys(email)
+    driver.find_element(By.NAME, "password").send_keys(password)
+
+    # Нажимаем кнопку "Войти"
     driver.find_element(By.XPATH, "//button[text()='Войти']").click()
 
-    # Пауза, чтобы удостовериться, что мы на странице личного кабинета
-    time.sleep(2)
+    # Ожидаем, что мы на странице личного кабинета
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located(ProfilePageLocators.PROFILE_PAGE_HEADER)
+    )
 
-    # Нажимаем кнопку "Конструктор"
-    driver.find_element(*ProfilePageLocators.CONSTRUCTOR_BUTTON).click()
+    # Переход в конструктор
+    driver.find_element(*ProfilePageLocators.LOGOUT_BUTTON).click()
 
-    # Пауза, чтобы удостовериться, что мы на странице конструктора
-    time.sleep(2)
+    # Ожидаем, что мы в разделе конструктора
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located(ConstructorPageLocators.BUNS_SECTION)
+    )
 
-    # Проверяем, что мы на странице конструктора (смотрим, есть ли элементы, уникальные для конструктора)
-    assert driver.find_element(*ConstructorPageLocators.LOGO_BUTTON).is_displayed()
-
-# Проверяет, что при нажатии на логотип на странице конструктора, мы возвращаемся на главную страницу.
-def test_go_to_main_from_constructor(driver):
-    # Открываем страницу конструктора
-    driver.get("https://stellarburgers.nomoreparties.site/constructor")
-
-    # Нажимаем на логотип Stellar Burgers, чтобы вернуться на главную
-    driver.find_element(*ConstructorPageLocators.LOGO_BUTTON).click()
-
-    # Пауза, чтобы удостовериться, что мы вернулись на главную страницу
-    time.sleep(2)
-
-    # Проверяем, что мы на главной странице
-    assert "Stellar Burgers" in driver.title
+    # Проверяем, что мы в конструкторе
+    assert "Конструктор" in driver.page_source

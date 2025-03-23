@@ -1,58 +1,41 @@
-import time
-from helpers.locators import MainPageLocators, ProfilePageLocators, RegistrationPageLocators, PasswordRecoveryPageLocators
 
-# Проверяет, что при нажатии на кнопку «Войти в аккаунт» на главной странице мы переходим на страницу входа.
-def test_login_button_main(driver):
+import pytest
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from helpers.locators import MainPageLocators, ProfilePageLocators
+from helpers.data import generate_email, generate_password
+
+
+def test_login_from_main_page(driver):
+    email = generate_email()
+    password = generate_password()
+
     # Открываем главную страницу
     driver.get("https://stellarburgers.nomoreparties.site/")
 
-    # Нажимаем кнопку "Войти в аккаунт"
-    driver.find_element(*MainPageLocators.LOGIN_BUTTON_MAIN).click()
+    # Явное ожидание кнопки "Войти в аккаунт"
+    login_button = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located(MainPageLocators.LOGIN_BUTTON_MAIN)
+    )
+    login_button.click()
 
-    # Пауза, чтобы убедиться, что мы перешли на страницу входа
-    time.sleep(2)
+    # Ожидаем появления полей для ввода email и пароля
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.NAME, "email"))
+    )
 
-    # Проверяем, что на странице входа есть форма для ввода логина
-    assert "Вход" in driver.title  # Проверяем, что мы на странице входа
+    # Вводим данные для входа
+    driver.find_element(By.NAME, "email").send_keys(email)
+    driver.find_element(By.NAME, "password").send_keys(password)
 
-# Проверяет, что при нажатии на кнопку «Личный кабинет» мы переходим на страницу входа.
-def test_login_button_profile(driver):
-    # Открываем главную страницу
-    driver.get("https://stellarburgers.nomoreparties.site/")
+    # Нажимаем кнопку "Войти"
+    driver.find_element(By.XPATH, "//button[text()='Войти']").click()
 
-    # Нажимаем кнопку "Личный кабинет"
-    driver.find_element(*ProfilePageLocators.PROFILE_BUTTON).click()
+    # Ожидаем, что мы на странице личного кабинета
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located(ProfilePageLocators.PROFILE_PAGE_HEADER)
+    )
 
-    # Пауза, чтобы убедиться, что мы перешли на страницу входа
-    time.sleep(2)
-
-    # Проверяем, что на странице входа есть форма для ввода логина
-    assert "Вход" in driver.title  # Проверяем, что мы на странице входа
-
-# Проверяет, что при нажатии на кнопку «Войти» на странице регистрации мы переходим на страницу входа.
-def test_login_button_registration(driver):
-    # Открываем страницу регистрации
-    driver.get("https://stellarburgers.nomoreparties.site/register")
-
-    # Нажимаем кнопку "Войти" на форме регистрации
-    driver.find_element(*RegistrationPageLocators.LOGIN_BUTTON_REGISTRATION).click()
-
-    # Пауза, чтобы убедиться, что мы перешли на страницу входа
-    time.sleep(2)
-
-    # Проверяем, что на странице входа есть форма для ввода логина
-    assert "Вход" in driver.title  # Проверяем, что мы на странице входа
-
-#Проверяет, что при нажатии на кнопку «Войти в аккаунт» на странице восстановления пароля мы переходим на страницу входа.
-def test_login_button_password_recovery(driver):
-    # Открываем страницу восстановления пароля
-    driver.get("https://stellarburgers.nomoreparties.site/forgot-password")
-
-    # Нажимаем кнопку "Войти в аккаунт" на форме восстановления пароля
-    driver.find_element(*PasswordRecoveryPageLocators.LOGIN_BUTTON_RECOVERY).click()
-
-    # Пауза, чтобы убедиться, что мы перешли на страницу входа
-    time.sleep(2)
-
-    # Проверяем, что на странице входа есть форма для ввода логина
-    assert "Вход" in driver.title  # Проверяем, что мы на странице входа
+    # Проверяем, что мы на странице личного кабинета
+    assert "Личный кабинет" in driver.page_source

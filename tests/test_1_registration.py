@@ -1,77 +1,75 @@
-# test_registration.py
-import re
+
 import pytest
-from locators import locators
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from helpers.locators import RegisterPageLocators, ProfilePageLocators
+from helpers.data import generate_email, generate_password
 
+def test_registration_successful(driver):
+    email = generate_email()
+    password = generate_password()
 
-# Функция для проверки формата email
-def is_valid_email(email):
-    regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    return bool(re.match(regex, email))
+    # Открываем главную страницу
+    driver.get("https://stellarburgers.nomoreparties.site/")
 
+    # Явное ожидание кнопки "Войти в аккаунт"
+    login_button = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.XPATH, "//button[text()='Войти в аккаунт']"))
+    )
+    login_button.click()
 
-# Функция для проверки правильности пароля
-def is_valid_password(password):
-    return len(password) >= 6
+    # Ожидаем появления формы регистрации
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.XPATH, "//h2[text()='Регистрация']"))
+    )
 
+    # Вводим данные для регистрации
+    driver.find_element(*RegisterPageLocators.NAME_FIELD).send_keys("TestUser")
+    driver.find_element(*RegisterPageLocators.EMAIL_FIELD).send_keys(email)
+    driver.find_element(*RegisterPageLocators.PASSWORD_FIELD).send_keys(password)
 
-# Функция для проверки успешной регистрации
-def successful_registration(driver, name, email, password):
-    if not is_valid_email(email):
-        print(f"Ошибка: Некорректный формат email: {email}")
-        return False
+    # Нажимаем кнопку "Зарегистрироваться"
+    driver.find_element(*RegisterPageLocators.REGISTER_BUTTON).click()
 
-    if not is_valid_password(password):
-        print(f"Ошибка: Пароль должен быть минимум из 6 символов.")
-        return False
+    # Ожидаем появления страницы профиля (личного кабинета)
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located(ProfilePageLocators.PROFILE_PAGE_HEADER)
+    )
 
-    driver.get('https://stellarburgers.nomoreparties.site/')
+    # Проверяем, что мы на странице личного кабинета
+    assert "Личный кабинет" in driver.page_source
 
-    # Ожидание появления кнопки "Зарегистрироваться" и переход на страницу регистрации
-    WebDriverWait(driver, 10).until(EC.element_to_be_clickable(locators["submit_button"])).click()
+def test_registration_invalid_password(driver):
+    email = generate_email()
+    invalid_password = "12345"  # Некорректный пароль (менее 6 символов)
 
-    driver.find_element(*locators['name_field']).send_keys(name)
-    driver.find_element(*locators['email_field']).send_keys(email)
-    driver.find_element(*locators['password_field']).send_keys(password)
-    driver.find_element(*locators['submit_button']).click()
+    # Открываем главную страницу
+    driver.get("https://stellarburgers.nomoreparties.site/")
 
-    # Ожидаем, что регистрация завершится, и появляется элемент подтверждения
-    WebDriverWait(driver, 10).until(EC.visibility_of_element_located(locators['personal_cabinet']))
+    # Явное ожидание кнопки "Войти в аккаунт"
+    login_button = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.XPATH, "//button[text()='Войти в аккаунт']"))
+    )
+    login_button.click()
 
-    print("Регистрация успешна!")
-    return True
+    # Ожидаем появления формы регистрации
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.XPATH, "//h2[text()='Регистрация']"))
+    )
 
+    # Вводим данные для регистрации
+    driver.find_element(*RegisterPageLocators.NAME_FIELD).send_keys("TestUser")
+    driver.find_element(*RegisterPageLocators.EMAIL_FIELD).send_keys(email)
+    driver.find_element(*RegisterPageLocators.PASSWORD_FIELD).send_keys(invalid_password)
 
-# Проверка ошибки при вводе некорректного пароля
-def invalid_password_registration(driver, name, email, password):
-    if not is_valid_password(password):
-        print(f"Ошибка: Пароль должен быть минимум из 6 символов.")
-        return False
+    # Нажимаем кнопку "Зарегистрироваться"
+    driver.find_element(*RegisterPageLocators.REGISTER_BUTTON).click()
 
-    driver.get('https://stellarburgers.nomoreparties.site/')
+    # Ожидаем появления ошибки на странице
+    error_message = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.XPATH, "//div[contains(text(),'Пароль должен быть')]]"))
+    )
 
-    driver.find_element(*locators['name_field']).send_keys(name)
-    driver.find_element(*locators['email_field']).send_keys(email)
-    driver.find_element(*locators['password_field']).send_keys(password)
-    driver.find_element(*locators['submit_button']).click()
-
-    # Ожидаем появления ошибки для пароля
-    WebDriverWait(driver, 10).until(EC.visibility_of_element_located(locators['error_message']))
-    print("Ошибка: Некорректный пароль")
-    return False
-
-
-# Тесты с использованием фикстуры
-
-def test_successful_registration(driver):
-    name = "ИмяТест"
-    email = "123@ya.ru"
-    password = "123456"  # Минимальная длина пароля: 6 символов
-    assert successful_registration(driver, name, email, password) == True
-
-
-def test_invalid_password_registration(driver):
-    name = "ИмяТест"
-    email = "123@ya.ru"
-    password = "123"  # Некорректный пароль (меньше 6 символов)
-    assert invalid_password_registration(driver, name, email, password) == False
+    # Проверяем, что ошибка появилась
+    assert "Пароль должен быть не менее 6 символов" in error_message.text
