@@ -1,24 +1,25 @@
+# conftest.py
 
 import pytest
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 
 
-# Фикстура для инициализации веб-драйвера
-@pytest.fixture(scope="function")
+# Фикстура для настройки WebDriver
+@pytest.fixture
 def driver():
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")  # Запускать браузер в фоновом режиме
-    service = Service('path_to_chromedriver')  # Укажите путь к ChromeDriver
-    driver = webdriver.Chrome(service=service, options=chrome_options)
+    # Настройки Chrome
+    options = Options()
+    options.add_argument("--start-maximized")  # Открывать браузер в максимизированном режиме
+    options.add_argument("--disable-extensions")  # Отключить расширения
 
-    # Убедитесь, что браузер открылся правильно
-    yield driver  # Это позволяет использовать driver в тестах
+    # Инициализация драйвера
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
-    # Закрытие браузера после выполнения теста
+    # Убедимся, что драйвер был корректно установлен
+    yield driver
+
+    # Закрытие браузера по окончанию теста
     driver.quit()
-}
-
-
-
