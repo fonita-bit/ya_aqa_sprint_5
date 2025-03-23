@@ -29,7 +29,7 @@ def test_successful_registration(driver):
 
 def test_invalid_password_registration(driver):
     """Тест регистрации с некорректным паролем"""
-    driver.get("https://stellarburgers.nomoreparties.site/register")
+    driver.get("https://stellarburgers.nomoreparties.site/login")
 
     # Ожидаем загрузки элементов страницы
     WebDriverWait(driver, 10).until(EC.presence_of_element_located(RegistrationPageLocators.NAME_FIELD))
