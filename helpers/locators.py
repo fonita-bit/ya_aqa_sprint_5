@@ -17,10 +17,10 @@ class RegisterPageLocators:
     NAME_FIELD = (By.NAME, "name")  # Поле для ввода имени
 
     # Поле "Email"
-    EMAIL_FIELD = (By.NAME, "email")  # Поле для ввода email
+    EMAIL_FIELD = (By.NAME, "Email")  # Поле для ввода email
 
     # Поле "Пароль"
-    PASSWORD_FIELD = (By.NAME, "password")  # Поле для ввода пароля
+    PASSWORD_FIELD = (By.NAME, "Пароль")  # Поле для ввода пароля
 
     # Кнопка регистрации
     REGISTER_BUTTON = (By.XPATH, "//button[text()='Зарегистрироваться']")  # Кнопка для регистрации
